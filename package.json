@@ -1,0 +1,21 @@
+{
+  "name": "letsencrypt-aws-lambda",
+  "version": "0.0.1",
+  "description": "letsencrypt by aws lambda everyday",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "letsencrypt",
+    "by",
+    "aws",
+    "lambda",
+    "everyday"
+  ],
+  "author": "guanbo",
+  "license": "ISC",
+  "dependencies": {
+    "serverless-python-requirements": "^4.2.4"
+  }
+}

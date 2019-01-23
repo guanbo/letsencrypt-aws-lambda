@@ -22,7 +22,7 @@ provider:
   runtime: python3.6
 
   stage: dev
-  region: cn-north-1
+  region: cn-northwest-1
 
 # you can add statements to the Lambda function's IAM Role here
   iamRoleStatements:

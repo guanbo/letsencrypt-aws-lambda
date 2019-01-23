@@ -2,6 +2,7 @@ import boto3
 import certbot.main
 import datetime
 import os
+import time
 # import raven
 import subprocess
 import re
@@ -11,6 +12,15 @@ def read_and_delete_file(path):
     contents = file.read()
   os.remove(path)
   return contents
+
+def get_cert_by_domain(first_domain):
+  path = '/tmp/config-dir/live/' + first_domain + '/'
+  return {
+    'name': cert_name,
+    'certificate': read_and_delete_file(path + 'cert.pem'),
+    'private_key': read_and_delete_file(path + 'privkey.pem'),
+    'certificate_chain': read_and_delete_file(path + 'chain.pem')
+  }
 
 def provision_cert(email, domains):
   first_domain = '.'.join(domains.split(',')[0].split('.')[-2:])
@@ -34,14 +44,7 @@ def provision_cert(email, domains):
     '--work-dir', '/tmp/work-dir/',
     '--logs-dir', '/tmp/logs-dir/',
   ])
-
-  path = '/tmp/config-dir/live/' + first_domain + '/'
-  return {
-    'name': cert_name,
-    'certificate': read_and_delete_file(path + 'cert.pem'),
-    'private_key': read_and_delete_file(path + 'privkey.pem'),
-    'certificate_chain': read_and_delete_file(path + 'chain.pem')
-  }
+  return get_cert_by_domain(first_domain)
 
 def should_provision(domains, days=30):
   existing_cert = find_existing_cert(domains)

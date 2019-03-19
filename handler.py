@@ -13,15 +13,6 @@ def read_and_delete_file(path):
   os.remove(path)
   return contents
 
-def get_cert_by_domain(first_domain):
-  path = '/tmp/config-dir/live/' + first_domain + '/'
-  return {
-    'name': cert_name,
-    'certificate': read_and_delete_file(path + 'cert.pem'),
-    'private_key': read_and_delete_file(path + 'privkey.pem'),
-    'certificate_chain': read_and_delete_file(path + 'chain.pem')
-  }
-
 def provision_cert(email, domains):
   first_domain = '.'.join(domains.split(',')[0].split('.')[-2:])
   expiration_date = datetime.datetime.now() + datetime.timedelta(days=90)
@@ -44,10 +35,18 @@ def provision_cert(email, domains):
     '--work-dir', '/tmp/work-dir/',
     '--logs-dir', '/tmp/logs-dir/',
   ])
-  return get_cert_by_domain(first_domain)
+
+  path = '/tmp/config-dir/live/' + first_domain + '/'
+  return {
+    'name': cert_name,
+    'certificate': read_and_delete_file(path + 'cert.pem'),
+    'private_key': read_and_delete_file(path + 'privkey.pem'),
+    'certificate_chain': read_and_delete_file(path + 'chain.pem')
+  }
 
 def should_provision(domains, days=30):
   existing_cert = find_existing_cert(domains)
+  print ("===== existing cert =====", existing_cert)
   if existing_cert:
     now = datetime.datetime.now(datetime.timezone.utc)
     not_after = existing_cert['Expiration']
@@ -140,12 +139,14 @@ def main(event, context):
     elb_listener_arn = get_parameter('elb_listener_arn')
     letsencrypt_email = get_parameter('letsencrypt_email')
     domains_list = get_parameter('letsencrypt_domains').split('|')
+    days = int(get_parameter('letsencrypt_period'))
     for domains in domains_list:
-      if should_provision(domains, 30):
+      if should_provision(domains, days):
         print ('====domains:', domains)
         cert = provision_cert(letsencrypt_email, domains)
         iam_response = upload_cert_to_iam(cert)
         cert_arn = iam_response['ServerCertificateMetadata']['Arn']
+        time.sleep(15)
         add_cert_to_alb(elb_listener_arn, cert_arn)
         # notify_via_sns(os.environ['NOTIFICATION_SNS_ARN'], domains, cert['certificate'])
     
